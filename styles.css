@@ -40,3 +40,20 @@ body, .navbar { background: var(--bg); color: var(--fg); }
 .navbar-nav { flex-direction: row; }
 #title-block-header { margin-bottom: 1.5rem; }
 .quarto-title-meta-heading, figcaption { color: var(--fg); }
+
+/* Keep each figure, its caption, and its original label together. */
+.apple-figures { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; margin: 1.5rem 0; }
+.apple-figure { min-width: 0; }
+.apple-figure figure { margin: 0; }
+.apple-figure figure > p { margin-top: 0; }
+.apple-figure > ol { margin-bottom: 0; }
+@media (min-width: 768px) {
+  .apple-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .navbar-container, .navbar-collapse { gap: .5rem; }
+  .navbar-brand { margin-right: 0; font-size: 1.1rem; }
+  .navbar .nav-link { font-size: .8rem; padding-inline: .15rem; }
+  .navbar-nav { gap: .5rem; }
+}
