@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#060d19">
+  <meta name="description" content="Explore a real multiparametric quadratic program: move two parameters and see critical regions, optimal decisions, and active constraints.">
+  <title>Multiparametric explorer · Rahul Kakodkar</title>
+  <link rel="stylesheet" href="../assets/fonts/fonts.css">
+  <link rel="stylesheet" href="explorer.css">
+  <script type="module" src="explorer.mjs"></script>
+</head>
+<body>
+  <div id="stars" aria-hidden="true"></div>
+  <main>
+    <a class="home" href="https://www.cacodcar.com/page" target="_top">Rahul Kakodkar</a>
+    <header class="intro">
+      <p class="eyebrow">playground</p>
+      <h1>Multiparametric explorer</h1>
+      <p class="subtitle">Move the parameters. See the decision change.</p>
+      <p class="example">Two targets, one shared limit <span class="quiet">· a quadratic program</span></p>
+    </header>
+    <p id="load-status" role="status">Loading the explicit solution…</p>
+    <noscript><p>This explorer needs JavaScript to evaluate the solution and move the point.</p></noscript>
+    <div id="workspace" class="workspace" hidden>
+      <section class="map-section" aria-labelledby="map-heading">
+        <div class="section-heading"><h2 id="map-heading">Parameter space</h2><button id="reset" class="text-control" type="button">Reset</button></div>
+        <svg id="map" viewBox="0 0 620 608" role="group" aria-label="Interactive parameter map. Use left and right arrows for theta 1; up and down for theta 2. Hold Shift for a larger step." tabindex="0" aria-describedby="map-help">
+          <defs>
+            <clipPath id="plot-clip"><rect x="64" y="24" width="510" height="510"/></clipPath>
+            <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="white" stop-opacity=".03"/><stop offset=".38" stop-color="white" stop-opacity=".02"/>
+              <stop offset=".49" stop-color="white" stop-opacity=".16"/><stop offset=".56" stop-color="white" stop-opacity=".02"/>
+              <stop offset="1" stop-color="white" stop-opacity=".07"/>
+            </linearGradient>
+          </defs>
+          <g id="regions" clip-path="url(#plot-clip)"></g>
+          <g id="grid" aria-hidden="true"></g>
+          <g id="labels" aria-hidden="true"></g>
+          <g id="axes" aria-hidden="true"></g>
+          <polyline id="trace-line" clip-path="url(#plot-clip)" fill="none" stroke="#e2d7c4" stroke-width="1.2" stroke-dasharray="5 7" opacity=".5" visibility="hidden"/>
+          <g id="selection" aria-hidden="true">
+            <path id="guides" fill="none" stroke="#e7e4df" stroke-width="1" stroke-dasharray="2 5" opacity=".7"/>
+            <circle id="point-halo" r="13" fill="#f2ece0" fill-opacity=".12"/>
+            <circle id="point" r="6.5" fill="#e7d6c7" stroke="#fff7ec" stroke-width="1.8"/>
+          </g>
+        </svg>
+        <p id="map-help" class="map-help">Drag or tap the map. Arrow keys work too.</p>
+        <div class="legend"><span><i class="swatch"></i><span id="region-count">Critical regions</span></span><span><i class="swatch selected"></i>Selected region</span></div>
+      </section>
+      <section class="inspector" aria-label="Parameters and optimal decision">
+        <h2>Parameters</h2>
+        <div class="parameter">
+          <div class="parameter-label"><label for="theta-1">θ₁ <span class="quiet">target 1</span></label><input id="value-1" type="number" min="-0.6" max="2" step="0.01" aria-label="Theta 1 value" value="1.45"></div>
+          <input id="theta-1" type="range" min="-0.6" max="2" step="0.01" value="1.45" aria-label="Theta 1">
+        </div>
+        <div class="parameter">
+          <div class="parameter-label"><label for="theta-2">θ₂ <span class="quiet">target 2</span></label><input id="value-2" type="number" min="-0.6" max="2" step="0.01" aria-label="Theta 2 value" value="1.25"></div>
+          <input id="theta-2" type="range" min="-0.6" max="2" step="0.01" value="1.25" aria-label="Theta 2">
+        </div>
+        <div class="region-info">
+          <p class="label">Active region</p><p id="region-name" class="region-name" aria-live="polite" aria-atomic="true"></p>
+          <p id="region-description" class="quiet"></p>
+          <p id="boundary-note" class="boundary-note" hidden></p>
+        </div>
+        <div class="rule-info">
+          <p class="label">Optimal decision</p>
+          <p class="general-rule">x<sup>∗</sup>(θ) = F<sub id="region-subscript">r</sub> θ + g<sub id="region-subscript-2">r</sub></p>
+          <div class="rule-lines"><p>x₁<sup>∗</sup> = <span id="rule-1"></span></p><p>x₂<sup>∗</sup> = <span id="rule-2"></span></p></div>
+        </div>
+        <div class="decisions" aria-label="Current solution">
+          <div><span>x₁<sup>∗</sup></span><output id="decision-1"></output></div>
+          <div><span>x₂<sup>∗</sup></span><output id="decision-2"></output></div>
+          <div><span>Loss</span><output id="objective"></output></div>
+        </div>
+        <details id="constraints"><summary>Active constraints <span id="active-count"></span></summary><div id="constraint-list"></div><p class="small quiet">A binding constraint has zero slack. On a boundary, additional constraints may bind.</p></details>
+        <div class="actions"><button id="trace" class="text-control" type="button" aria-pressed="false">Trace a path</button><button id="show-model" class="text-control" type="button" aria-expanded="false" aria-controls="model-details">Show model</button></div>
+      </section>
+    </div>
+    <section class="explanation" id="explanation" hidden>
+      <h2>What changes at a boundary?</h2>
+      <p>The binding constraints can change, and so does the decision rule. In this example the optimal decision stays continuous, even as its slope changes.</p>
+    </section>
+    <section id="model-details" class="model-details" hidden aria-labelledby="model-heading">
+      <h2 id="model-heading">Two targets, one shared limit</h2>
+      <p>Choose two nonnegative allocations, x₁ and x₂, as close as possible to the requested targets θ₁ and θ₂. Each allocation has its own capacity, and their sum cannot exceed 2.</p>
+      <div class="model-grid"><div class="math-block">
+        <p>minimize <span class="math">½ (x₁ − θ₁)² + ½ (x₂ − θ₂)²</span></p>
+        <p>subject to <span class="math">0 ≤ x₁ ≤ 1.4</span></p>
+        <p><span class="math indent">0 ≤ x₂ ≤ 1.2</span></p>
+        <p><span class="math indent">x₁ + x₂ ≤ 2</span></p>
+        <p>parameters <span class="math">−0.6 ≤ θ₁, θ₂ ≤ 2</span></p>
+      </div><div>
+        <p>The negative targets make the lower-bound regions visible. Every displayed parameter pair has a feasible solution.</p>
+        <p>Each colored region has one affine rule for the optimal allocation. The solution is evaluated directly from that rule as you move the point.</p>
+        <p><a href="model.json" download="multiparametric-model.json">Download the solution</a></p>
+      </div></div>
+      <p class="small quiet">Computed with <a href="https://ppopt.readthedocs.io/" target="_blank" rel="noopener">PPOPT</a>. Region interiors, shared boundaries, and numerical solutions are checked against independent projection and direct quadratic optimization. <a href="tools/validation.json" target="_blank" rel="noopener">Validation record</a></p>
+    </section>
+  </main>
+</body>
+</html>
