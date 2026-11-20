@@ -1,5 +1,6 @@
+energiapy @ git+https://github.com/TAMUparametric/energiapy.git@ea42c1a5df65451df664827ca6a67d9793329bcb
+gana[highs]==1.4.0
+vaelchi==0.1.1
 ppopt==1.6.12
 numpy>=1.24,<3
 scipy>=1.10,<2
-cvxopt>=1.3,<2
-quadprog>=0.1.13,<1

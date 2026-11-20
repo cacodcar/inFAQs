@@ -1,136 +1,137 @@
-"""Generate and independently verify the explorer's explicit mpQP solution.
-
-Run: python3 _app/tools/generate.py
-Build dependencies: ppopt, numpy, scipy, cvxopt, quadprog.
-The browser only needs the exported model.json, not these packages.
-"""
-
+"""Solve the original Energia hydrogen case and export its two dispatch regimes."""
 import json
 from importlib.metadata import version
 from pathlib import Path
-
 import numpy as np
-from ppopt.mp_solvers.solve_mpqp import mpqp_algorithm, solve_mpqp
-from ppopt.mpqp_program import MPQP_Program
-from ppopt.solver import Solver
-from scipy.optimize import minimize
+from scipy.optimize import linprog
+from source_model import build_model
 
 ROOT = Path(__file__).resolve().parents[1]
-A = np.array([[-1, 0], [0, -1], [1, 0], [0, 1], [1, 1]], dtype=float)
-B = np.array([0, 0, 1.4, 1.2, 2.0])
-LOW, HIGH = -0.6, 2.0
-
+SOURCE_COMMIT = 'ea42c1a5df65451df664827ca6a67d9793329bcb'
+DOMAIN = np.array([[0.5, 2.5], [6.0, 28.0]])
+A = np.array([[-1,0],[0,-1],[1,0],[0,1],[-.019,-.019],[.1753,.1753]])
+B = np.array([[0,0],[0,0],[0,0],[0,0],[-1,0],[0,1]])
+b = np.array([0,0,75,85,0,0])
+c = np.array([567+.001*.1753,990+.001*.1753])
 
 def clip(vertices, normal, bound):
-    """Intersect a convex polygon with a half-plane."""
-    result = []
-    for start, end in zip(vertices, vertices[1:] + vertices[:1]):
-        s = float(np.dot(normal, start) - bound)
-        e = float(np.dot(normal, end) - bound)
-        if s <= 1e-10:
-            result.append(start)
+    result=[]
+    for start,end in zip(vertices,vertices[1:]+vertices[:1]):
+        s=float(np.dot(normal,start)-bound); e=float(np.dot(normal,end)-bound)
+        if s<=1e-10: result.append(start)
         if (s < -1e-10 and e > 1e-10) or (e < -1e-10 and s > 1e-10):
-            result.append((np.array(start) + s / (s - e) * (np.array(end) - start)).tolist())
-    unique = []
+            result.append((np.array(start)+s/(s-e)*(np.array(end)-start)).tolist())
+    unique=[]
     for point in result:
-        if not unique or np.linalg.norm(np.array(point) - unique[-1]) > 1e-9:
-            unique.append(point)
-    if len(unique) > 1 and np.linalg.norm(np.array(unique[0]) - unique[-1]) < 1e-9:
-        unique.pop()
+        if not unique or np.linalg.norm(np.array(point)-unique[-1])>1e-8: unique.append(point)
+    if len(unique)>1 and np.linalg.norm(np.array(unique[0])-unique[-1])<1e-8: unique.pop()
     return unique
 
+def rectangle():
+    return [[.5,6],[2.5,6],[2.5,28],[.5,28]]
 
 def clean(value):
-    array = np.asarray(value, dtype=float)
-    array[np.abs(array) < 1e-12] = 0
-    return np.round(array, 12).tolist()
+    array=np.asarray(value,dtype=float).copy()
+    array[np.abs(array)<1e-10]=0
+    return np.round(array,12).tolist()
 
+def polygon_key(vertices):
+    return tuple(sorted(tuple(np.round(v,8)) for v in vertices))
 
-def project_reference(theta):
-    """Independent geometric projection onto all five feasible edges."""
-    if np.all(A @ theta <= B + 1e-12):
-        return theta.copy()
-    vertices = np.array([[0, 0], [1.4, 0], [1.4, 0.6], [0.8, 1.2], [0, 1.2]])
-    candidates = []
-    for start, end in zip(vertices, np.roll(vertices, -1, axis=0)):
-        edge = end - start
-        scale = np.clip(np.dot(theta - start, edge) / np.dot(edge, edge), 0, 1)
-        candidates.append(start + scale * edge)
-    return min(candidates, key=lambda x: np.linalg.norm(x - theta))
+def area(vertices):
+    return abs(sum(a[0]*b[1]-a[1]*b[0] for a,b in zip(vertices,vertices[1:]+vertices[:1])))/2
 
-
-def validate(model):
-    """Check coverage, boundary agreement, feasibility, and optimality."""
-    rng = np.random.default_rng(20261120)
-    points = rng.uniform(LOW, HIGH, (3000, 2)).tolist()
-    points += [[x, y] for x in np.linspace(LOW, HIGH, 31) for y in np.linspace(LOW, HIGH, 31)]
-    for region in model['regions']:
-        vertices = region['vertices']
-        points.extend(vertices)
-        for start, end in zip(vertices, vertices[1:] + vertices[:1]):
-            midpoint = (np.array(start) + end) / 2
-            points.append(midpoint.tolist())
-            for offset in ([1e-7, 0], [-1e-7, 0], [0, 1e-7], [0, -1e-7]):
-                points.append(np.clip(midpoint + offset, LOW, HIGH).tolist())
-    worst = 0.0
-    boundary_count = 0
-    for coordinates in points:
-        theta = np.array(coordinates)
-        matches = [r for r in model['regions'] if np.all(np.array(r['E']) @ theta <= np.array(r['f']) + 1e-9)]
-        assert matches, f'Uncovered point: {theta}'
-        reference = project_reference(theta)
-        if len(matches) > 1:
-            boundary_count += 1
-        for region in matches:
-            x = np.array(region['F']) @ theta + region['g']
-            error = float(np.max(np.abs(x - reference)))
-            worst = max(worst, error)
-            assert error < 1e-7, (theta, region['id'], x, reference)
-            assert np.max(A @ x - B) < 1e-8
-    # Separate optimizer check: SLSQP on the original objective and constraints.
-    for theta in rng.uniform(LOW, HIGH, (200, 2)):
-        result = minimize(lambda x: 0.5 * np.sum((x - theta) ** 2), [0.5, 0.5],
-                          jac=lambda x: x - theta, method='SLSQP',
-                          constraints={'type': 'ineq', 'fun': lambda x: B - A @ x,
-                                       'jac': lambda x: -A},
-                          options={'ftol': 1e-12, 'maxiter': 100})
-        assert result.success, result.message
-        assert np.max(np.abs(result.x - project_reference(theta))) < 1e-7
-    return {'checked_points': len(points), 'shared_boundary_points': boundary_count,
-            'direct_qp_checks': 200, 'max_decision_error': worst}
-
+def validate(model, solution, columns):
+    rng=np.random.default_rng(20261120)
+    points=rng.uniform(DOMAIN[:,0],DOMAIN[:,1],(1600,2)).tolist()
+    points += [[x,y] for x in np.linspace(.5,2.5,41) for y in np.linspace(6,28,41)]
+    points += [[1.425,w] for w in np.linspace(14,28,41)]
+    for demand in np.linspace(6*.019/.1753,2.5,101):
+        for epsilon in [-1e-5,0,1e-5]:
+            points.append([demand, max(6,demand*.1753/.019+epsilon)])
+    for r in model['regions']:
+        points.extend(r['vertices'])
+        points.extend(((np.array(a)+z)/2).tolist() for a,z in zip(r['vertices'],r['vertices'][1:]+r['vertices'][:1]))
+    full=solution.program
+    eq=list(full.equality_indices)
+    ub=[i for i in range(full.A.shape[0]) if i not in eq]
+    worst=worst_cost=0.; feasible=0; infeasible=0; boundary=0
+    for coords in points:
+        theta=np.array(coords)
+        matches=[r for r in model['regions'] if np.all(np.array(r['E'])@theta<=np.array(r['f'])+1e-8)]
+        rhs=(full.b+full.F@theta.reshape(-1,1)).ravel()
+        cost=(full.c+full.H@theta.reshape(-1,1)).ravel()
+        direct=linprog(cost,A_ub=full.A[ub],b_ub=rhs[ub],A_eq=full.A[eq],b_eq=rhs[eq],
+                       bounds=[(None,None)]*full.A.shape[1],method='highs',
+                       options={'primal_feasibility_tolerance':1e-9,'dual_feasibility_tolerance':1e-9})
+        assert bool(matches)==direct.success,(theta,direct.message)
+        if not matches:
+            assert direct.status==2,(theta,direct.message)
+            assert theta[1] < theta[0]*.1753/.019+1e-8
+            infeasible+=1
+            continue
+        feasible+=1
+        boundary+=len(matches)>1
+        for r in matches:
+            x=np.array(r['F'])@theta+np.array(r['g'])
+            error=float(np.max(np.abs(x-direct.x[columns])))
+            cost_error=abs(float(c@x)-direct.fun)
+            worst=max(worst,error);worst_cost=max(worst_cost,cost_error)
+            assert error<1e-7,(theta,x,direct.x[columns])
+            assert cost_error<1e-5,(theta,cost_error)
+            assert np.max(A@x-b-B@theta)<1e-8
+            assert abs(.019*sum(x)-theta[0])<1e-8
+    total_area=sum(area(r['vertices']) for r in model['regions']+model['infeasible'])
+    assert abs(total_area-44)<1e-8,total_area
+    return {'checked_points':len(points),'direct_full_model_lp_checks':len(points),
+            'feasible_points':feasible,'infeasible_points':infeasible,'shared_boundary_points':boundary,
+            'max_dispatch_error':worst,'max_cost_error':worst_cost,'parameter_domain_area':total_area,
+            'reference_solver':'SciPy HiGHS; full 19-variable Energia/Gana formulation',
+            'source_commit':SOURCE_COMMIT}
 
 def main():
-    parameter_a = np.array([[1, 0], [-1, 0], [0, 1], [0, -1]], dtype=float)
-    parameter_b = np.array([HIGH, -LOW, HIGH, -LOW]).reshape(-1, 1)
-    program = MPQP_Program(
-        A, B.reshape(-1, 1), np.zeros((2, 1)), -np.eye(2), np.eye(2),
-        parameter_a, parameter_b, np.zeros((5, 2)), Q_t=np.eye(2),
-        solver=Solver({'lp': 'glpk', 'qp': 'quadprog', 'milp': 'gurobi', 'miqp': 'gurobi'}),
-        post_process=False,
-    )
-    solution = solve_mpqp(program, mpqp_algorithm.combinatorial)
-    regions = []
-    for index, region in enumerate(sorted(solution.critical_regions, key=lambda r: (len(r.active_set), tuple(r.active_set)))):
-        vertices = [[LOW, LOW], [HIGH, LOW], [HIGH, HIGH], [LOW, HIGH]]
-        for normal, bound in zip(region.E, region.f.ravel()):
-            vertices = clip(vertices, normal, bound)
-        assert len(vertices) >= 3
-        regions.append({'id': index + 1, 'active': list(map(int, region.active_set)),
-                        'E': clean(region.E), 'f': clean(region.f.ravel()),
-                        'F': clean(region.A), 'g': clean(region.b.ravel()),
-                        'vertices': clean(vertices), 'label': clean(np.mean(vertices, axis=0))})
-    model = {'schema_version': 1, 'title': 'Two targets, one shared limit',
-             'generator': {'package': 'PPOPT', 'version': version('ppopt'), 'algorithm': 'combinatorial'},
-             'domain': [[LOW, HIGH], [LOW, HIGH]], 'initial': [1.45, 1.25],
-             'A': clean(A), 'b': clean(B),
-             'constraints': ['x₁ ≥ 0', 'x₂ ≥ 0', 'x₁ ≤ 1.4', 'x₂ ≤ 1.2', 'x₁ + x₂ ≤ 2'],
-             'regions': regions}
-    report = validate(model)
-    (ROOT / 'model.json').write_text(json.dumps(model, indent=2) + '\n')
-    (ROOT / 'tools' / 'validation.json').write_text(json.dumps(report, indent=2) + '\n')
-    print(json.dumps({'regions': len(regions), **report}, indent=2))
+    m=build_model();m.solve()
+    solution=m.program.solution
+    variables=list(m.program.variables)
+    columns=[next(i for i,v in enumerate(variables) if v is target) for target in (m.pv.operate.V()[0],m.wind_farm.operate.V()[0])]
+    assert solution.program.A.shape[1]==len(variables)
+    regions=[]
+    seen=set()
+    for raw in solution.critical_regions:
+        vertices=rectangle()
+        for normal,bound in zip(raw.E,raw.f.ravel()): vertices=clip(vertices,normal,bound)
+        if len(vertices)<3 or area(vertices)<1e-8: continue
+        key=polygon_key(vertices)
+        F=clean(raw.A[columns]);g=clean(raw.b[columns].ravel())
+        if key in seen:
+            existing=next(r for r in regions if polygon_key(r['vertices'])==key)
+            assert np.allclose(existing['F'],F,atol=1e-9) and np.allclose(existing['g'],g,atol=1e-9)
+            continue
+        seen.add(key)
+        regions.append({'E':clean(raw.E),'f':clean(raw.f.ravel()),'F':F,'g':g,'vertices':clean(vertices),
+                        'label':clean(np.mean(vertices,axis=0))})
+    regions.sort(key=lambda r:-r['F'][0][0])
+    assert len(regions)==2
+    for i,r in enumerate(regions):
+        r['id']=i+1
+        r['name']=['Solar only','Solar + wind'][i]
+        r['description']=['Solar meets the hydrogen request. Wind stays idle.','Solar is at its limit; wind supplies the additional electricity.'][i]
+        theta=np.array(r['label']); x=np.array(r['F'])@theta+r['g']
+        r['active']=np.where(np.abs(b+B@theta-A@x)<1e-8)[0].tolist()
+    unavailable=clip(rectangle(),[-.1753/.019,1],0)
+    model={'schema_version':2,'title':'Hydrogen production under demand and water uncertainty',
+           'source':{'repository':'TAMUparametric/energiapy','commit':SOURCE_COMMIT,'path':'docs/examples/case_studies/parametric_hydrogen.ipynb'},
+           'generator':{'packages':{p:version(p) for p in ['energiapy','gana','ppopt']},'algorithm':'combinatorial',
+                        'raw_regions':len(solution.critical_regions),'deduplicated_regions':len(regions),
+                        'note':'Coincident regions with identical solar/wind rules are deduplicated.'},
+           'units':'Original study units; source does not specify physical units. Illustrative cost coefficients.',
+           'domain':DOMAIN.tolist(),'initial':[2,22],'hydrogen_yield':.019,'water_per_power':.1753,
+           'water_per_hydrogen':.1753/.019,'A':clean(A),'b':clean(b),'B':clean(B),'c':clean(c),
+           'constraints':['Solar ≥ 0','Wind ≥ 0','Solar ≤ 75','Wind ≤ 85','Hydrogen ≥ demand','Water used ≤ available'],
+           'regions':regions,'infeasible':[{'vertices':clean(unavailable),'label':clean(np.mean(unavailable,axis=0))}]}
+    report=validate(model,solution,columns)
+    (ROOT/'model.json').write_text(json.dumps(model,indent=2)+'\n')
+    (ROOT/'tools'/'validation.json').write_text(json.dumps(report,indent=2)+'\n')
+    print(json.dumps({'critical_regions':len(regions),**report},indent=2))
 
-
-if __name__ == '__main__':
-    main()
+if __name__=='__main__': main()
