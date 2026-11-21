@@ -61,8 +61,10 @@ async function start() {
     svgElement('text',{x:52,y:sy(value)+5,'text-anchor':'end',class:'tick'},$('axes'),String(value));
   }
   svgElement('path',{d:'M64,18 V534 H581',fill:'none',stroke:'#bdc9d8','stroke-width':1},$('axes'));
-  svgElement('text',{x:319,y:590,'text-anchor':'middle',class:'axis-label'},$('axes'),'D · hydrogen demand');
-  svgElement('text',{x:17,y:283,'text-anchor':'middle',class:'axis-label'},$('axes'),'W');
+  const demandAxis=svgElement('text',{x:319,y:590,'text-anchor':'middle',class:'axis-label'},$('axes'));
+  svgElement('tspan',{class:'math-variable'},demandAxis,'d');
+  svgElement('tspan',{},demandAxis,' · hydrogen demand');
+  svgElement('text',{x:17,y:283,'text-anchor':'middle',class:'axis-label math-variable'},$('axes'),'w');
   $('region-count').textContent=`${model.regions.length} critical regions`;
 
   function render() {
@@ -84,10 +86,15 @@ async function start() {
     $('boundary-note').hidden=true;
     if(result.feasible) {
       $('region-description').textContent=result.region.description;
-      $('region-subscript').textContent=String(id); $('region-subscript-2').textContent=String(id);
       for(let i=0;i<2;i++) {
         $(`decision-${i+1}`).textContent=format(result.x[i]);
-        $(`rule-${i+1}`).textContent=affineText(result.region.F[i],result.region.g[i]);
+        const rest=affineText(result.region.F[i].map(v=>-v),-result.region.g[i],3,['d','w']).replace(/^−/,'− ');
+        const equation=`${['s','v'][i]}${rest==='0'?'':rest.startsWith('−')?` ${rest}`:` + ${rest}`} = 0`;
+        const line=$(`rule-${i+1}`);
+        line.replaceChildren(...equation.split(/([svdw])/).filter(Boolean).map(part=>{
+          if(!/^[svdw]$/.test(part))return document.createTextNode(part);
+          const symbol=document.createElement('b');symbol.className='math-variable';symbol.textContent=part;return symbol;
+        }));
       }
       $('objective').textContent=format(result.objective,2);
       $('balance-summary').textContent=`Hydrogen delivered: ${format(result.hydrogen)}. Water used: ${format(result.water)} of ${format(theta[1],2)} available.`;
@@ -144,11 +151,6 @@ async function start() {
     number.addEventListener('blur',()=>{number.value=theta[i].toFixed(i===0?3:2);});
   }
   $('reset').addEventListener('click',()=>{$('trace-line').setAttribute('visibility','hidden');update([...model.initial]);});
-  $('show-model').addEventListener('click',()=>{
-    const open=$('model-details').hidden;
-    $('model-details').hidden=!open;$('show-model').textContent=open?'Hide model':'Show model';$('show-model').setAttribute('aria-expanded',String(open));
-    if(open)$('model-details').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});
-  });
   const waypoints=[[.75,9],[1.2,16],[2,22],[2,12],[1,12],[2.4,26],[2,22]];
   $('trace-line').setAttribute('points',polygonPoints(waypoints));
   $('trace').addEventListener('click',()=>{

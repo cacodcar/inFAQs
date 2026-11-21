@@ -79,11 +79,16 @@ details[open] summary::after{content:'−'}
 .explanation p{font-size:1rem;margin-bottom:0;color:#ced5df}
 .model-details{margin-top:32px;padding-top:24px;border-top:1px solid var(--line);scroll-margin-top:20px}
 .model-details h2{margin-bottom:12px}
-.model-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:35px}
-.math-block{padding:15px 0;line-height:1.7}
-.math-block p{margin-bottom:4px}
-.math{font-size:1.08rem;margin-left:10px;font-style:italic}
-.indent{margin-left:99px}
+.model-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:45px}
+.math-block{padding:0 0 10px;line-height:1.7}
+.math-block .equation-label{color:var(--muted);font-size:.88rem;margin:16px 0 8px}
+.math-block math{font-family:'STIX Two Text',Georgia,serif;font-size:1.2rem;text-align:left;margin:0 0 9px}
+.math-block mi.math-variable{font-weight:700;font-style:normal;text-transform:none}
+.math-variable{font-family:'STIX Two Text',Georgia,serif;font-weight:700;font-style:normal}
+.affine-note{font-size:.9rem;margin:0 0 10px}
+.rule-lines p{display:flex;gap:20px;flex-wrap:wrap}
+.rule-lines p>.quiet{min-width:42px}
+.rule-lines p>span:last-child{font-variant-numeric:tabular-nums}
 html.embed main{padding-top:22px}
 html.embed .home{display:none}
 html.embed .intro{margin-top:0}
@@ -102,3 +107,34 @@ html.transparent #stars{display:none}
 .unavailable-label{font-size:20px;fill:#cbb4b8;pointer-events:none}
 .region-name{font-size:1.5rem}
 @media(max-width:680px){.regime-label{font-size:26px}.map-help{margin:3px 0 12px}.unavailable-label{font-size:24px}.axis-label{font-size:25px}.case-intro{font-size:.95rem}.decisions{gap:8px}.decisions output{font-size:1.15rem}.general-rule{font-size:1.35rem}.indent{margin-left:25px}}
+.page-links{display:flex;gap:26px;flex-wrap:wrap;margin:0 0 28px;font-size:.95rem}
+.page-links a{padding:6px 0}
+.problem,.source-note{border-top:1px solid var(--line);padding-top:24px;margin-top:25px;scroll-margin-top:20px}
+.problem h2,.source-note h2{margin-bottom:12px}
+.section-intro{color:#ced5df;max-width:850px;margin-bottom:18px}
+.rtn-figure{margin:16px 0 0}
+.rtn{display:block;width:100%;height:auto;font-family:inherit;overflow:visible}
+.rtn-narrow{display:none}
+.rtn-edges{fill:none;stroke:#95abc5;stroke-width:1.4}
+.rtn marker path{fill:none;stroke:#95abc5;stroke-width:1.2}
+.rtn-resources circle{fill:#111d2d;fill-opacity:.6;stroke:#8da5c1;stroke-width:1.2}
+.rtn-resources .rtn-parameter{stroke:#c4acb9;fill:#9b7692;fill-opacity:.10}
+.rtn-tasks rect{fill:#bfd2eb;fill-opacity:.055;stroke:#b8cbe2;stroke-width:1.2}
+.rtn-text{fill:var(--ink);text-anchor:middle;font-size:20px}
+.rtn-notes{fill:var(--muted);text-anchor:middle;font-size:18px;font-style:normal}
+.rtn-notes text{paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round}
+.rtn-figure figcaption{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;font-size:.85rem;margin-top:18px}
+.rtn-key{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.rtn-key i{display:inline-block;border:1px solid #8da5c1;width:16px;height:16px}
+.resource-key{border-radius:50%}
+.model-guide{padding-top:15px}
+.model-guide h3{font-size:1.05rem;font-weight:400;margin:0 0 12px;color:var(--link)}
+.model-guide p{font-size:.95rem;color:#ced5df;margin-bottom:15px}
+.variable-key{display:grid;grid-template-columns:55px 1fr;gap:7px 12px;margin:0 0 22px;font-size:.95rem}
+.variable-key dt{font-style:normal}.variable-key dd{margin:0;color:#ced5df}
+.explore-intro{border-top:1px solid var(--line);padding-top:25px;margin-top:24px;margin-bottom:24px;color:#ced5df;max-width:none}
+.workspace{scroll-margin-top:20px}
+.actions{align-items:center}
+.source-note{font-size:.94rem}.source-note h2{font-size:1.3rem}
+@media(max-width:959px){.rtn-wide{display:none}.rtn-narrow{display:block;max-width:440px;margin:24px auto}.rtn-narrow .rtn-text{font-size:18px}.rtn-narrow .rtn-notes{font-size:16px}}
+@media(max-width:680px){.page-links{gap:10px 24px}.model-grid{grid-template-columns:1fr;gap:10px}.math-block math{font-size:1.15rem}.rtn-figure figcaption{gap:12px 22px}.rtn-figure figcaption>.quiet{width:100%;text-align:center}.variable-key{grid-template-columns:48px 1fr}.model-guide{padding-top:8px}}

@@ -21,7 +21,71 @@
       <p class="subtitle">How should solar and wind power hydrogen production?</p>
       <p class="example">Hydrogen production <span class="quiet">· an Energia case study</span></p>
       <p class="case-intro">Meet a hydrogen request at minimum cost. Solar is cheaper, wind adds supply, and electrolysis needs water.</p>
+      <nav class="page-links" aria-label="Explorer sections"><a href="#problem">The network</a><a href="#model-details">Formulation</a><a href="#workspace">Explore the solution</a></nav>
     </header>
+    <section id="problem" class="problem" aria-labelledby="problem-heading">
+      <h2 id="problem-heading">The resource–task network</h2>
+      <p class="section-intro">Solar and wind generate electricity. The electrolyzer consumes electricity and water, producing hydrogen and oxygen.</p>
+      <figure class="rtn-figure">
+        <svg class="rtn rtn-wide" viewBox="0 0 1100 330" role="img" aria-labelledby="rtn-title rtn-desc">
+          <title id="rtn-title">Hydrogen-production resource–task network</title>
+          <desc id="rtn-desc">Sunlight feeds photovoltaic generation; wind feeds wind generation. Both supply electricity to electrolysis. Water is a second input to electrolysis, which produces hydrogen and oxygen. Each renewable input is limited to 100. Water use u cannot exceed w, and hydrogen output h must meet demand d. Circles represent resources; rectangles represent tasks.</desc>
+          <defs><marker id="rtn-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9"/></marker></defs>
+          <g class="rtn-edges" marker-end="url(#rtn-arrow)">
+            <path d="M129 92 H214"/><path d="M129 242 H214"/>
+            <path d="M350 92 H391 Q408 92 408 109 V150 H448"/><path d="M350 242 H391 Q408 242 408 225 V184 H448"/>
+            <path d="M542 167 H674"/><path d="M750 104 V140"/>
+            <path d="M826 154 H870 Q886 154 886 138 V92 H949"/>
+            <path d="M826 180 H870 Q886 180 886 196 V242 H949"/>
+          </g>
+          <g class="rtn-resources"><circle cx="85" cy="92" r="44"/><circle cx="85" cy="242" r="44"/><circle cx="495" cy="167" r="47"/><circle class="rtn-parameter" cx="750" cy="60" r="44"/><circle class="rtn-parameter" cx="995" cy="92" r="46"/><circle cx="995" cy="242" r="46"/></g>
+          <g class="rtn-tasks"><rect x="214" y="65" width="136" height="54"/><rect x="214" y="215" width="136" height="54"/><rect x="674" y="140" width="152" height="54"/></g>
+          <g class="rtn-text"><text x="85" y="98">Sunlight</text><text x="85" y="248">Wind</text><text x="495" y="173">Electricity</text><text x="750" y="66">Water</text><text x="995" y="98">Hydrogen</text><text x="995" y="248">Oxygen</text><text x="282" y="98">PV generation</text><text x="282" y="248">Wind farm</text><text x="750" y="173">Electrolysis</text></g>
+          <g class="rtn-notes"><text x="85" y="154">input cap. 100</text><text x="85" y="304">input cap. 100</text><text x="282" y="146"><tspan class="math-variable">s</tspan> − 75 ≤ 0</text><text x="282" y="296"><tspan class="math-variable">v</tspan> − 85 ≤ 0</text><text x="605" y="150"><tspan class="math-variable">e</tspan></text><text x="820" y="111"><tspan class="math-variable">u</tspan> − <tspan class="math-variable">w</tspan> ≤ 0</text><text x="995" y="158"><tspan class="math-variable">d</tspan> − <tspan class="math-variable">h</tspan> ≤ 0</text><text x="995" y="309"><tspan class="math-variable">o</tspan></text></g>
+        </svg>
+        <svg class="rtn rtn-narrow" viewBox="0 0 360 630" role="img" aria-labelledby="rtn-mobile-title rtn-mobile-desc">
+          <title id="rtn-mobile-title">Hydrogen-production resource–task network</title>
+          <desc id="rtn-mobile-desc">Sunlight and wind feed PV generation and a wind farm. Both produce electricity. Electricity and water enter electrolysis, which produces hydrogen and oxygen. Water use u is limited by w and hydrogen h must meet d. Circles represent resources; rectangles represent tasks.</desc>
+          <defs><marker id="rtn-mobile-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9"/></marker></defs>
+          <g class="rtn-edges" marker-end="url(#rtn-mobile-arrow)"><path d="M80 87 V153"/><path d="M280 87 V153"/><path d="M80 203 V238 Q80 251 93 251 H117 V267"/><path d="M280 203 V238 Q280 251 267 251 H147 V267"/><path d="M132 355 V415"/><path d="M292 349 V376 Q292 389 279 389 H193 V415"/><path d="M123 469 V500 H80 V531"/><path d="M202 469 V500 H280 V531"/></g>
+          <g class="rtn-resources"><circle cx="80" cy="48" r="39"/><circle cx="280" cy="48" r="39"/><circle cx="132" cy="311" r="44"/><circle class="rtn-parameter" cx="292" cy="311" r="38"/><circle class="rtn-parameter" cx="80" cy="576" r="45"/><circle cx="280" cy="576" r="45"/></g>
+          <g class="rtn-tasks"><rect x="14" y="153" width="132" height="50"/><rect x="214" y="153" width="132" height="50"/><rect x="86" y="415" width="158" height="54"/></g>
+          <g class="rtn-text"><text x="80" y="54">Sunlight</text><text x="280" y="54">Wind</text><text x="80" y="184">PV generation</text><text x="280" y="184">Wind farm</text><text x="132" y="317">Electricity</text><text x="292" y="317">Water</text><text x="165" y="448">Electrolysis</text><text x="80" y="582">Hydrogen</text><text x="280" y="582">Oxygen</text></g>
+          <g class="rtn-notes"><text x="80" y="112">input cap. 100</text><text x="280" y="112">input cap. 100</text><text x="127" y="225"><tspan class="math-variable">s</tspan> − 75 ≤ 0</text><text x="233" y="225"><tspan class="math-variable">v</tspan> − 85 ≤ 0</text><text x="68" y="385"><tspan class="math-variable">e</tspan></text><text x="239" y="369"><tspan class="math-variable">u</tspan> − <tspan class="math-variable">w</tspan> ≤ 0</text><text x="38" y="516"><tspan class="math-variable">d</tspan> − <tspan class="math-variable">h</tspan> ≤ 0</text><text x="310" y="516"><tspan class="math-variable">o</tspan></text></g>
+        </svg>
+        <figcaption><span class="rtn-key"><i class="resource-key"></i>Resource</span><span class="rtn-key"><i class="task-key"></i>Task</span><span class="quiet"><b class="math-variable">d</b> and <b class="math-variable">w</b> are the parameters you explore.</span></figcaption>
+      </figure>
+    </section>
+    <section id="model-details" class="model-details" aria-labelledby="model-heading">
+      <h2 id="model-heading">The formulation</h2>
+      <p class="section-intro">For each demand <b class="math-variable">d</b> and water availability <b class="math-variable">w</b>, choose the resource flows that minimize operating cost.</p>
+      <div class="model-grid">
+        <div class="math-block">
+          <p class="equation-label">Minimize over <b class="math-variable">s</b>, <b class="math-variable">v</b>, <b class="math-variable">e</b>, <b class="math-variable">u</b>, <b class="math-variable">h</b>, <b class="math-variable">o</b></p>
+          <math display="block"><mrow><mn>567</mn><mi mathvariant="normal" class="math-variable">s</mi><mo>+</mo><mn>990</mn><mi mathvariant="normal" class="math-variable">v</mi><mo>+</mo><mn>0.001</mn><mi mathvariant="normal" class="math-variable">u</mi></mrow></math>
+          <p class="equation-label">Resource balances</p>
+          <math display="block"><mrow><mi mathvariant="normal" class="math-variable">e</mi><mo>−</mo><mi mathvariant="normal" class="math-variable">s</mi><mo>−</mo><mi mathvariant="normal" class="math-variable">v</mi><mo>=</mo><mn>0</mn></mrow></math>
+          <math display="block"><mrow><mi mathvariant="normal" class="math-variable">h</mi><mo>−</mo><mn>0.019</mn><mi mathvariant="normal" class="math-variable">e</mi><mo>=</mo><mn>0</mn></mrow></math>
+          <math display="block"><mrow><mi mathvariant="normal" class="math-variable">u</mi><mo>−</mo><mn>0.1753</mn><mi mathvariant="normal" class="math-variable">e</mi><mo>=</mo><mn>0</mn></mrow></math>
+          <math display="block"><mrow><mi mathvariant="normal" class="math-variable">o</mi><mo>−</mo><mn>0.7632</mn><mi mathvariant="normal" class="math-variable">e</mi><mo>=</mo><mn>0</mn></mrow></math>
+          <p class="equation-label">Demand, water, and generation limits</p>
+          <math display="block"><mrow><mi mathvariant="normal" class="math-variable">d</mi><mo>−</mo><mi mathvariant="normal" class="math-variable">h</mi><mo>≤</mo><mn>0</mn><mo>,</mo><mspace width="1em"/><mi mathvariant="normal" class="math-variable">u</mi><mo>−</mo><mi mathvariant="normal" class="math-variable">w</mi><mo>≤</mo><mn>0</mn></mrow></math>
+          <math display="block"><mrow><mi mathvariant="normal" class="math-variable">s</mi><mo>−</mo><mn>75</mn><mo>≤</mo><mn>0</mn><mo>,</mo><mspace width="1em"/><mi mathvariant="normal" class="math-variable">v</mi><mo>−</mo><mn>85</mn><mo>≤</mo><mn>0</mn></mrow></math>
+          <math display="block"><mrow><mo>−</mo><mi mathvariant="normal" class="math-variable">s</mi><mo>≤</mo><mn>0</mn><mo>,</mo><mspace width="1em"/><mo>−</mo><mi mathvariant="normal" class="math-variable">v</mi><mo>≤</mo><mn>0</mn></mrow></math>
+          <p class="equation-label">Parametric domain</p>
+          <math display="block"><mrow><mn>0.5</mn><mo>−</mo><mi mathvariant="normal" class="math-variable">d</mi><mo>≤</mo><mn>0</mn><mo>,</mo><mspace width="1em"/><mi mathvariant="normal" class="math-variable">d</mi><mo>−</mo><mn>2.5</mn><mo>≤</mo><mn>0</mn></mrow></math>
+          <math display="block"><mrow><mn>6</mn><mo>−</mo><mi mathvariant="normal" class="math-variable">w</mi><mo>≤</mo><mn>0</mn><mo>,</mo><mspace width="1em"/><mi mathvariant="normal" class="math-variable">w</mi><mo>−</mo><mn>28</mn><mo>≤</mo><mn>0</mn></mrow></math>
+        </div>
+        <div class="model-guide">
+          <h3>Reading the model</h3>
+          <dl class="variable-key"><dt><b class="math-variable">s</b>, <b class="math-variable">v</b></dt><dd>Solar and wind electricity</dd><dt><b class="math-variable">e</b></dt><dd>Electricity consumed by electrolysis</dd><dt><b class="math-variable">u</b></dt><dd>Water consumed</dd><dt><b class="math-variable">h</b>, <b class="math-variable">o</b></dt><dd>Hydrogen and oxygen produced</dd><dt><b class="math-variable">d</b>, <b class="math-variable">w</b></dt><dd>Hydrogen demand and water available</dd></dl>
+          <p>The renewable input limits are 100 each. Conversion efficiencies of 0.75 for PV and 0.85 for wind give electricity limits of 75 and 85.</p>
+          <p>Oxygen leaves as a byproduct, without revenue or a demand requirement. The model covers one period, with fixed supply limits and no storage. Nonnegative solar and wind dispatch also make the remaining resource flows nonnegative through the balances.</p>
+          <p class="quiet">Coefficients and quantities use the source notebook’s study units. <a href="#source-heading">Source and scope</a></p>
+        </div>
+      </div>
+    </section>
+    <p class="explore-intro">Move through the parameter space to see which constraints bind and how the optimal dispatch changes.</p>
     <p id="load-status" role="status">Loading the explicit solution…</p>
     <noscript><p>This explorer needs JavaScript to evaluate the solution and move the point.</p></noscript>
     <div id="workspace" class="workspace" hidden>
@@ -53,13 +117,13 @@
         <div class="legend"><span><i class="swatch"></i><span id="region-count">Critical regions</span></span><span><i class="swatch unavailable"></i>Insufficient water</span></div>
       </section>
       <section class="inspector" aria-label="Parameters and optimal decision">
-        <h2>Parameters</h2><p class="units-note quiet">Original study units</p>
+        <h2>Parametric variables</h2><p class="units-note quiet">Original study units</p>
         <div class="parameter">
-          <div class="parameter-label"><label for="theta-1">D <span class="quiet">hydrogen demand</span></label><input id="value-1" type="number" min="0.5" max="2.5" step="0.001" aria-label="Hydrogen demand value" value="2"></div>
+          <div class="parameter-label"><label for="theta-1"><b class="math-variable">d</b> <span class="quiet">hydrogen demand</span></label><input id="value-1" type="number" min="0.5" max="2.5" step="0.001" aria-label="Hydrogen demand value" value="2"></div>
           <input id="theta-1" type="range" min="0.5" max="2.5" step="0.001" value="2" aria-label="Hydrogen demand">
         </div>
         <div class="parameter">
-          <div class="parameter-label"><label for="theta-2">W <span class="quiet">water available</span></label><input id="value-2" type="number" min="6" max="28" step="0.01" aria-label="Water availability value" value="22"></div>
+          <div class="parameter-label"><label for="theta-2"><b class="math-variable">w</b> <span class="quiet">water available</span></label><input id="value-2" type="number" min="6" max="28" step="0.01" aria-label="Water availability value" value="22"></div>
           <input id="theta-2" type="range" min="6" max="28" step="0.01" value="22" aria-label="Water availability">
         </div>
         <div class="region-info">
@@ -69,8 +133,8 @@
         </div>
         <div class="rule-info" id="rule-info">
           <p class="label">Optimal decision</p>
-          <p class="general-rule">p<sup>∗</sup>(D, W) = F<sub id="region-subscript">r</sub> (D, W)<sup>T</sup> + g<sub id="region-subscript-2">r</sub></p>
-          <div class="rule-lines"><p>Solar = <span id="rule-1"></span></p><p>Wind = <span id="rule-2"></span></p></div>
+          <p class="affine-note quiet">Affine dispatch within this region</p>
+          <div class="rule-lines"><p><span class="quiet">Solar</span><span id="rule-1"></span></p><p><span class="quiet">Wind</span><span id="rule-2"></span></p></div>
         </div>
         <div class="decisions" aria-label="Current solution">
           <div><span>Solar</span><output id="decision-1"></output></div>
@@ -79,27 +143,17 @@
         </div>
         <p id="balance-summary" class="balance-summary"></p>
         <details id="constraints"><summary>Active constraints <span id="active-count"></span></summary><div id="constraint-list"></div><p class="small quiet">A binding constraint has zero slack. On a boundary, additional constraints may bind.</p></details>
-        <div class="actions"><button id="trace" class="text-control" type="button" aria-pressed="false">Trace a path</button><button id="show-model" class="text-control" type="button" aria-expanded="false" aria-controls="model-details">Show model</button></div>
+        <div class="actions"><button id="trace" class="text-control" type="button" aria-pressed="false">Trace a path</button><a href="#model-details">View formulation</a></div>
       </section>
     </div>
     <section class="explanation" id="explanation" hidden>
       <h2>Why does the decision change?</h2>
       <p>Solar supplies the electrolyzer first. At a hydrogen demand of 1.425, solar reaches its limit and wind covers the additional electricity. Below the diagonal water boundary, neither energy source can make the request feasible.</p>
     </section>
-    <section id="model-details" class="model-details" hidden aria-labelledby="model-heading">
-      <h2 id="model-heading">From Energia’s hydrogen-production model</h2>
-      <p>This is the existing single-period <a id="source-link" href="https://github.com/TAMUparametric/energiapy/blob/ea42c1a5df65451df664827ca6a67d9793329bcb/docs/examples/case_studies/parametric_hydrogen.ipynb" target="_blank" rel="noopener">parametric hydrogen case study</a>, with its demand range, water range, conversion coefficients, and illustrative costs preserved. Quantities and costs use the notebook’s original study units.</p>
-      <div class="model-grid"><div class="math-block">
-        <p>minimize <span class="math">567 S + 990 V + 0.001 U</span></p>
-        <p>subject to <span class="math">H = 0.019 (S + V) ≥ D</span></p>
-        <p><span class="math indent">U = 0.1753 (S + V) ≤ W</span></p>
-        <p><span class="math indent">0 ≤ S ≤ 75, 0 ≤ V ≤ 85</span></p>
-        <p>parameters <span class="math">0.5 ≤ D ≤ 2.5, 6 ≤ W ≤ 28</span></p>
-      </div><div>
-        <p>S and V are solar and wind electricity, H is delivered hydrogen, and U is water consumed. The electricity balance eliminates the electrolyzer’s power input. Solar and wind output limits follow from the original input limits of 100 and conversion efficiencies of 0.75 and 0.85.</p>
-        <p>Water required is U = (0.1753 / 0.019) D. More water than this gives spare capacity; less makes the request infeasible. This is a single-period operating model with fixed renewable supply limits.</p>
-      </div></div>
-      <p>The case study uses illustrative coefficients. Its two feasible critical regions describe solar-only operation and combined solar–wind operation.</p>
+    <section class="source-note" aria-labelledby="source-heading">
+      <h2 id="source-heading">About this example</h2>
+      <p>This single-period model comes from Energia’s <a id="source-link" href="https://github.com/TAMUparametric/energiapy/blob/ea42c1a5df65451df664827ca6a67d9793329bcb/docs/examples/case_studies/parametric_hydrogen.ipynb" target="_blank" rel="noopener">parametric hydrogen notebook</a>. Its illustrative coefficients and parameter ranges are preserved; physical units are unspecified in the notebook, so values use original study units.</p>
+      <p>The related paper <a href="https://doi.org/10.1016/B978-0-443-28824-1.50209-X" target="_blank" rel="noopener">Robust Scheduling of Energy Systems Under Forecasting Uncertainty</a> considers a different network: wind generation, a small modular nuclear reactor, and lithium-ion storage over 24 periods. Its parameter controls the size of the wind-forecast uncertainty set. Here, <b class="math-variable">d</b> and <b class="math-variable">w</b> specify individual demand and water scenarios; this explorer does not compute robust schedules.</p>
       <p class="small quiet">Computed with Energia, Gana, and PPOPT; checked against independent direct linear optimization. Values and rules are rounded for display. <a href="model.json" download="hydrogen-explicit-solution.json">Download the solution</a> · <a href="tools/validation.json" target="_blank" rel="noopener">Validation record</a></p>
     </section>
   </main>

@@ -17,13 +17,24 @@ The notebook is a compact study with illustrative coefficients, not a measured
 plant dataset. Physical units are unspecified; the interface preserves study
 units and does not invent currency, kWh, or kg labels.
 
-With solar electricity S, wind electricity V, hydrogen H, and water use U:
+With bold lowercase variables for solar electricity s, wind electricity v,
+electrolyzer power e, hydrogen h, water u, and oxygen o, and bold lowercase
+parametric variables d (demand) and w (water availability):
 
-- Minimize `567 S + 990 V + .001 U`.
-- `H = .019 (S + V) >= D`.
-- `U = .1753 (S + V) <= W`.
-- `0 <= S <= 75`, `0 <= V <= 85`.
-- `D in [.5, 2.5]`, `W in [6, 28]`.
+- Minimize `567 s + 990 v + .001 u`.
+- Resource balances: `e - s - v = 0`, `h - .019 e = 0`,
+  `u - .1753 e = 0`, `o - .7632 e = 0`.
+- Limits: `d - h <= 0`, `u - w <= 0`, `s - 75 <= 0`, `v - 85 <= 0`.
+- Nonnegativity: `-s <= 0`, `-v <= 0`; the balances imply nonnegative e, h, u, o.
+- Parametric domain: `.5 - d <= 0`, `d - 2.5 <= 0`, `6 - w <= 0`, `w - 28 <= 0`.
+
+The displayed formulation uses canonical zero-right-hand-side constraints.
+Each equality remains one equality, never a pair of inequalities. In the site's
+standing convention, fixed symbolic parameters are upright uppercase and
+non-bold, sets are calligraphic uppercase, and indices are ordinary lowercase
+math. This example displays fixed coefficients numerically and needs no sets.
+Native MathML with upright identifiers and STIX bold text implements the
+variable convention, including in the RTN, axes, controls, and affine rules.
 
 The input limits of 100 and conversion efficiencies .75/.85 produce the 75/85
 electricity bounds. The exporter solves the full Energia/Gana formulation,
@@ -65,3 +76,27 @@ The guided path includes feasible and infeasible requests; manual input pauses
 it. No animation starts automatically. Mobile stacks the map and inspector.
 `&transparent=1` is available only when an embedding container supplies a suitable
 dark background; otherwise the app supplies its own navy background.
+
+## Visible model and resource–task network
+
+The introduction shows a resource–task network (RTN) with all six resources
+(sunlight, wind, electricity, water, hydrogen, oxygen) and three tasks (PV,
+wind generation, electrolysis). Wide and narrow SVG layouts preserve the same
+eight directed connections. Resource circles and task rectangles distinguish
+the two node types; bold lowercase d and w identify the explored parameters.
+
+The formulation is always visible, including electricity e - s - v = 0, oxygen
+o - .7632 e = 0, all resource balances, bounds, and the parameter domain. These
+are the full network balances after eliminating renewable input flows; they
+reduce to the LP above. Native MathML preserves selectable, accessible equations
+without a third-party renderer. Display changes do not alter the solution.
+
+This notebook is a different example from Kakodkar et al. (2024),
+[Robust Scheduling of Energy Systems Under Forecasting Uncertainty – A
+Multi-Parametric Optimization Approach](https://doi.org/10.1016/B978-0-443-28824-1.50209-X).
+That paper schedules wind generation, a small modular reactor, and lithium-ion
+storage over 24 periods. It parameterizes the wind-forecast uncertainty set
+with theta and reports six critical regions for the resulting one-parameter
+robust scheduling problem. The explorer instead varies demand d and water w
+in a one-period deterministic LP and has two feasible critical regions. It
+must not be presented as a reproduction of the paper or a robust counterpart.
